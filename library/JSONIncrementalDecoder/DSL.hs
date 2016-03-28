@@ -2,10 +2,12 @@ module JSONIncrementalDecoder.DSL
 (
   value_supplementedParser,
   value_parser,
+  value_byteStringToEither,
   -- * Value
   Value,
   null,
   string,
+  matcher_string,
   object,
   -- * Object
   Object,
@@ -15,24 +17,40 @@ module JSONIncrementalDecoder.DSL
   -- * Lookup
   Lookup,
   at,
+  -- * Matcher
+  Matcher,
+  equals,
+  satisfies,
+  converts,
+  whatever,
 )
 where
 
 import JSONIncrementalDecoder.Prelude hiding (String, null)
 import Data.Attoparsec.ByteString.Char8 (Parser)
+import qualified Data.Attoparsec.ByteString.Char8
 import qualified JSONIncrementalDecoder.SupplementedParsers as SupplementedParsers
 import qualified JSONIncrementalDecoder.Parsers as Parsers
 import qualified Matcher
 
 
 value_supplementedParser :: Value a -> Supplemented Parser a
-value_supplementedParser (Value a) =
-  undefined
+value_supplementedParser (Value impl) =
+  impl
 
 value_parser :: Value a -> Parser (a, Parser ())
 value_parser =
   runSupplemented .
   value_supplementedParser
+
+value_byteStringToEither :: Value a -> ByteString -> Either Text a
+value_byteStringToEither value input =
+  either (Left . fromString) Right $
+  Data.Attoparsec.ByteString.Char8.parseOnly parser input
+  where
+    parser =
+      fmap fst $
+      value_parser value
 
 
 -- * Value
@@ -40,13 +58,33 @@ value_parser =
 
 newtype Value a =
   Value (Supplemented Parser a)
+  deriving (Functor)
+
+-- |
+-- Provides support for alternatives.
+-- 
+-- E.g,
+-- 
+-- >fmap Left bool <> fmap Right string
+-- 
+-- will succeed for either a Boolean or String value.
+instance Monoid (Value a) where
+  mempty =
+    Value empty
+  mappend (Value a) (Value b) =
+    Value (a <|> b)
 
 null :: Value ()
 null =
   undefined
 
-string :: Matcher Text a -> Value a
-string matcher =
+string :: Value Text
+string =
+  Value $
+  SupplementedParsers.stringLit
+
+matcher_string :: Matcher Text a -> Value a
+matcher_string matcher =
   Value $
   SupplementedParsers.stringLit >>=
   either (const mzero) return . Matcher.run matcher
@@ -81,17 +119,21 @@ row combine keyMatcher (Value value) =
 
 skipRow :: Object ()
 skipRow =
-  row (const (const ())) whatever anyValue
+  Object (lift (SupplementedParsers.skipRow))
 
 lookup_object :: Lookup Text Object a -> Object a
 lookup_object (Lookup lookupImpl) =
-  runUnsequential (runReaderT lookupImpl lookupRow) skipRow (return ()) <*
-  skipMany skipRow
+  runUnsequential (runReaderT lookupImpl lookupRow) skipRow <*
+  remainders
   where
     lookupRow =
       LookupRow $
       \key value ->
         row (const id) (equals key) value
+    remainders =
+      Object $
+      lift $
+      SupplementedParsers.skipRows
 
 
 -- * Lookup

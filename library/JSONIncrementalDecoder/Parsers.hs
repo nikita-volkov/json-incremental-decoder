@@ -1,10 +1,11 @@
 module JSONIncrementalDecoder.Parsers
 where
 
-import JSONIncrementalDecoder.Prelude hiding (scanl, isDigit, bool, null)
+import JSONIncrementalDecoder.Prelude hiding (scanl, isDigit, bool, null, takeWhile)
 import Data.Attoparsec.ByteString.Char8
 import qualified Data.HashMap.Strict
 import qualified Control.Monad.Par
+import qualified JSONIncrementalDecoder.Parsers.Aeson as Aeson
 
 
 -- * General Parser
@@ -74,7 +75,7 @@ bool =
 
 stringLitAsText :: Parser Text
 stringLitAsText =
-  undefined
+  Aeson.jstring
 
 intLit :: Integral a => Parser a
 intLit =
@@ -131,6 +132,10 @@ objectBody body =
 arrayBody :: Parser a -> Parser a
 arrayBody body =
   char '[' *> skipSpace *> body <* skipSpace <* char ']'
+
+colon :: Parser ()
+colon =
+  skipSpace *> char ':' *> skipSpace
 
 comma :: Parser ()
 comma =
