@@ -45,8 +45,8 @@ library
     JSONIncrementalDecoder.Prelude
     JSONIncrementalDecoder.Parsers
     JSONIncrementalDecoder.SupplementedParsers
-    JSONIncrementalDecoder.DSL
   exposed-modules:
+    JSONIncrementalDecoder.DSL
   build-depends:
     -- 
     monad-par >= 0.3.4 && < 0.4,
@@ -64,7 +64,7 @@ library
     matcher >= 0.1 && < 0.2,
     interspersed >= 0.1 && < 0.2,
     unsequential >= 0.4 && < 0.5,
-    supplemented >= 0.2 && < 0.3,
+    supplemented >= 0.3 && < 0.4,
     free >= 4.12 && < 5,
     transformers >= 0.4 && < 0.6,
     base-prelude < 2
