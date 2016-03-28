@@ -33,28 +33,48 @@ object (Object interspersedSupplementedParser) =
 newtype String a =
   String (Supplemented Parser a)
 
+matcher_string :: Matcher Text a -> String a
+matcher_string =
+  undefined
+
 
 newtype Object a =
   Object (Interspersed (Supplemented Parser) a)
-  deriving (Functor, Applicative, Alternative)
+  deriving (Functor, Applicative, Alternative, Monad, MonadPlus)
 
 {-# INLINE row #-}
 row :: (a -> b -> c) -> String a -> Value b -> Object c
 row combine (String string) (Value value) =
   Object (lift (SupplementedParsers.row combine string value))
 
+skipRow :: Object ()
+skipRow =
+  row (const (const ())) (matcher_string whatever) undefined
+
+lookup_object :: Lookup Text Object a -> Object a
+lookup_object (Lookup lookupImpl) =
+  runUnsequential (runReaderT lookupImpl lookupRow) skipRow (return ()) <*
+  skipMany skipRow
+  where
+    lookupRow =
+      LookupRow $
+      \key value ->
+        row (const id) (matcher_string (equals key)) value
 
 
 newtype Lookup key context result =
-  Lookup (ReaderT (forall a. key -> Value a -> context a) (Unsequential context) result)
+  Lookup (ReaderT (LookupRow key context) (Unsequential context) result)
   deriving (Functor, Applicative)
 
 at :: Monad context => key -> Value a -> Lookup key context a
 at key value =
   Lookup $
   ReaderT $
-  unsequential . foolTheCompiler key value
-  where
-    foolTheCompiler :: key -> Value a -> (forall a. key -> Value a -> context a) -> context a
-    foolTheCompiler key value row =
-      row key value
+  \(LookupRow lookupRow) ->
+    unsequential (lookupRow key value)
+
+
+-- |
+-- Required to work around the ImpredicativeTypes insanity.
+newtype LookupRow key context =
+  LookupRow (forall a. key -> Value a -> context a)
