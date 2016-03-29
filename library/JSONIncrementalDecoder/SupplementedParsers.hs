@@ -24,21 +24,28 @@ comma :: Supplemented Parser ()
 comma =
   supplement Parsers.comma
 
+{-# INLINE null #-}
+null :: Supplemented Parser ()
+null =
+  essence Parsers.null
+
+{-# INLINE stringLit #-}
 stringLit :: Supplemented Parser Text
 stringLit =
   essence Parsers.stringLitAsText
 
-{-# INLINE skipValue #-}
-skipValue :: Supplemented Parser ()
-skipValue =
+{-# INLINE anyValue #-}
+anyValue :: Supplemented Parser ()
+anyValue =
   supplement skipJSONLit
 
-{-# INLINE skipRow #-}
-skipRow :: Supplemented Parser ()
-skipRow =
+{-# INLINE anyRow #-}
+anyRow :: Supplemented Parser ()
+anyRow =
   supplement skipObjectRow
 
-skipRows :: Supplemented Parser ()
-skipRows =
+{-# INLINE anyRows #-}
+anyRows :: Supplemented Parser ()
+anyRows =
   supplement $
   skipSepBy Parsers.skipObjectRow Parsers.comma

@@ -11,10 +11,9 @@ import JSONIncrementalDecoder.DSL
 
 dateStrings :: Value (Text, Text, Text)
 dateStrings =
-  object $
-  lookup_object $
+  objectLookup $
   (,,) <$>
-  at "year" string <*>
-  at "month" string <*>
-  at "day" string
+  atKey "year" string <*>
+  atKey "month" string <*>
+  atKey "day" string
 

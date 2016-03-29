@@ -7,16 +7,17 @@ module JSONIncrementalDecoder.DSL
   Value,
   null,
   string,
-  matcher_string,
-  object,
-  -- * Object
-  Object,
+  stringMatcher,
+  objectRows,
+  objectLookup,
+  anyValue,
+  -- * ObjectRows
+  ObjectRows,
   row,
-  skipRow,
-  lookup_object,
-  -- * Lookup
-  Lookup,
-  at,
+  anyRow,
+  -- * ObjectLookup
+  ObjectLookup,
+  atKey,
   -- * Matcher
   Matcher,
   equals,
@@ -69,89 +70,90 @@ newtype Value a =
 -- 
 -- will succeed for either a Boolean or String value.
 instance Monoid (Value a) where
+  {-# INLINE mempty #-}
   mempty =
     Value empty
+  {-# INLINE mappend #-}
   mappend (Value a) (Value b) =
     Value (a <|> b)
 
+{-# INLINE null #-}
 null :: Value ()
 null =
-  undefined
+  Value $
+  SupplementedParsers.null
 
+{-# INLINE string #-}
 string :: Value Text
 string =
   Value $
   SupplementedParsers.stringLit
 
-matcher_string :: Matcher Text a -> Value a
-matcher_string matcher =
+stringMatcher :: Matcher Text a -> Value a
+stringMatcher matcher =
   Value $
   SupplementedParsers.stringLit >>=
   either (const mzero) return . Matcher.run matcher
 
-object :: Object a -> Value a
-object (Object interspersedSupplementedParser) =
+objectRows :: ObjectRows a -> Value a
+objectRows (ObjectRows interspersedSupplementedParser) =
   Value (SupplementedParsers.object supplementedParser)
   where
     supplementedParser =
       runInterspersed interspersedSupplementedParser SupplementedParsers.comma
 
+objectLookup :: ObjectLookup a -> Value a
+objectLookup (ObjectLookup lookupImpl) =
+  objectRows $
+  runUnsequential lookupImpl anyRow <*
+  remainders
+  where
+    remainders =
+      ObjectRows $
+      lift $
+      SupplementedParsers.anyRows
+
+-- |
+-- Matches any value.
+{-# INLINE anyValue #-}
 anyValue :: Value ()
 anyValue =
-  Value SupplementedParsers.skipValue
+  Value SupplementedParsers.anyValue
 
 
--- * Object
+-- * ObjectRows
 -------------------------
 
-newtype Object a =
-  Object (Interspersed (Supplemented Parser) a)
+newtype ObjectRows a =
+  ObjectRows (Interspersed (Supplemented Parser) a)
   deriving (Functor, Applicative, Alternative, Monad, MonadPlus)
 
-{-# INLINE row #-}
-row :: (a -> b -> c) -> Matcher Text a -> Value b -> Object c
+{-# INLINABLE row #-}
+row :: (a -> b -> c) -> Matcher Text a -> Value b -> ObjectRows c
 row combine keyMatcher (Value value) =
-  Object (lift (SupplementedParsers.row combine key value))
+  ObjectRows (lift (SupplementedParsers.row combine key value))
   where
     key =
       SupplementedParsers.stringLit >>=
       either (const mzero) return . Matcher.run keyMatcher
 
-skipRow :: Object ()
-skipRow =
-  Object (lift (SupplementedParsers.skipRow))
-
-lookup_object :: Lookup Text Object a -> Object a
-lookup_object (Lookup lookupImpl) =
-  runUnsequential (runReaderT lookupImpl lookupRow) skipRow <*
-  remainders
-  where
-    lookupRow =
-      LookupRow $
-      \key value ->
-        row (const id) (equals key) value
-    remainders =
-      Object $
-      lift $
-      SupplementedParsers.skipRows
+{-# INLINE anyRow #-}
+anyRow :: ObjectRows ()
+anyRow =
+  ObjectRows (lift (SupplementedParsers.anyRow))
 
 
--- * Lookup
+-- * ObjectLookup
 -------------------------
 
-newtype Lookup k m a =
-  Lookup (ReaderT (LookupRow k m) (Unsequential m) a)
+newtype ObjectLookup a =
+  ObjectLookup (Unsequential ObjectRows a)
   deriving (Functor, Applicative)
 
--- |
--- Required to work around the ImpredicativeTypes insanity.
-newtype LookupRow key context =
-  LookupRow (forall a. key -> Value a -> context a)
-
-at :: Monad m => k -> Value a -> Lookup k m a
-at key value =
-  Lookup $
-  ReaderT $
-  \(LookupRow lookupRow) ->
-    unsequential (lookupRow key value)
+{-# INLINE atKey #-}
+atKey :: Text -> Value a -> ObjectLookup a
+atKey key value =
+  ObjectLookup $
+  unsequential $
+  row (const id) (equals key) value
 
