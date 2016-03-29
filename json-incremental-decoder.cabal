@@ -5,6 +5,9 @@ version:
 synopsis:
   A parser-agnostic declarative API for querying JSON-documents
 description:
+  /CAUTION/.
+  At the moment this library is only intended for use with trusted data-sources,
+  because some of the parsers are vulnerable to attacks.
 category:
   Data, JSON, Parsing
 homepage:
@@ -47,7 +50,7 @@ library
     JSONIncrementalDecoder.Parsers.Aeson
     JSONIncrementalDecoder.SupplementedParsers
   exposed-modules:
-    JSONIncrementalDecoder.DSL
+    JSONIncrementalDecoder
   build-depends:
     -- 
     monad-par >= 0.3.4 && < 0.4,
@@ -65,7 +68,7 @@ library
     matcher >= 0.1 && < 0.2,
     interspersed >= 0.1 && < 0.2,
     unsequential >= 0.5 && < 0.6,
-    supplemented >= 0.4 && < 0.5,
+    supplemented >= 0.5 && < 0.6,
     free >= 4.12 && < 5,
     transformers >= 0.4 && < 0.6,
     -- 
@@ -90,8 +93,6 @@ test-suite parsing-test
   build-depends:
     --
     json-incremental-decoder,
-    -- 
-    attoparsec >= 0.13 && < 0.14,
     -- testing:
     tasty == 0.11.*,
     tasty-quickcheck == 0.8.*,

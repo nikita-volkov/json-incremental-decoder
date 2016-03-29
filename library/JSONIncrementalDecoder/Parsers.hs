@@ -73,13 +73,25 @@ bool =
   stringCI "false" $> False <|>
   stringCI "true" $> True
 
+{-# INLINE stringLitAsText #-}
 stringLitAsText :: Parser Text
 stringLitAsText =
   Aeson.jstring
 
-intLit :: Integral a => Parser a
-intLit =
+{-# INLINE numberLitAsIntegral #-}
+numberLitAsIntegral :: Integral a => Parser a
+numberLitAsIntegral =
   signed decimal <* shouldFail (char '.')
+
+{-# INLINE numberLitAsDouble #-}
+numberLitAsDouble :: Parser Double
+numberLitAsDouble =
+  signed double
+
+{-# INLINE numberLitAsScientific #-}
+numberLitAsScientific :: Parser Scientific
+numberLitAsScientific =
+  signed scientific
 
 -- |
 -- An optimized parser, which skips the next valid JSON literal.

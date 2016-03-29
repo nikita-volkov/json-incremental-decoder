@@ -15,6 +15,10 @@ object body =
     closingParser =
       skipSpace <* char '}'
 
+array :: Supplemented Parser a -> Supplemented Parser a
+array body =
+  essence (char '[' *> skipSpace) *> body <* supplement (skipSpace <* char ']')
+
 row :: (a -> b -> c) -> Supplemented Parser a -> Supplemented Parser b -> Supplemented Parser c
 row fn field value =
   fn <$> (field <* supplement Parsers.colon) <*> value

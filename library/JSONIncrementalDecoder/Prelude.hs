@@ -69,6 +69,9 @@ import Data.ByteString as Exports (ByteString)
 -------------------------
 import Data.Text as Exports (Text)
 
+-- scientific
+-------------------------
+import Data.Scientific as Exports (Scientific)
 
 -- Utils
 -------------------------
