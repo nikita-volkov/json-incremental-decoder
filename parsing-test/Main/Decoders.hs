@@ -1,6 +1,8 @@
 module Main.Decoders
 (
   date,
+  solrSelectResponseDocumentIDs,
+  solrSelectResponseNumFound,
   module JSONIncrementalDecoder,
 )
 where
@@ -28,3 +30,24 @@ arrayDate =
   element numberAsInt <*>
   element numberAsInt <*>
   element numberAsInt
+
+solrSelectResponseDocumentIDs :: Value [Text]
+solrSelectResponseDocumentIDs =
+  objectLookup $
+  atKey "response" $
+  objectLookup $
+  atKey "docs" $
+  arrayElements $
+  many $
+  element $
+  objectLookup $
+  atKey "id" $
+  string
+
+solrSelectResponseNumFound :: Value Int
+solrSelectResponseNumFound =
+  objectLookup $
+  atKey "response" $
+  objectLookup $
+  atKey "numFound" $
+  numberAsInt
