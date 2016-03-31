@@ -100,4 +100,4 @@ test-suite parsing-test
     quickcheck-instances >= 0.3.11 && < 0.4,
     QuickCheck >= 2.8.1 && < 2.9,
     --
-    rebase >= 0.4 && < 0.5
+    rebase >= 0.4 && < 2
