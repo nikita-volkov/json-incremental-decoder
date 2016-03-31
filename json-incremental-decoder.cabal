@@ -1,7 +1,7 @@
 name:
   json-incremental-decoder
 version:
-  0.1
+  0.1.0.1
 synopsis:
   A parser-agnostic declarative API for querying JSON-documents
 description:
