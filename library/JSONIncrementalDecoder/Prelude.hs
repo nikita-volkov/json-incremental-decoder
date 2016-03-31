@@ -28,11 +28,6 @@ import Control.Monad.Trans.Reader as Exports hiding (liftCallCC, liftCatch, lift
 import Control.Monad.Trans.State.Strict as Exports hiding (liftCallCC, liftCatch, liftListen, liftPass)
 import Control.Monad.Trans.Writer.Strict as Exports
 
--- free
--------------------------
-import Control.Alternative.Free.Final as Exports
-import Control.Applicative.Free.Final as Exports
-
 -- supplemented
 -------------------------
 import Supplemented as Exports
