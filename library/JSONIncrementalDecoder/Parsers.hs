@@ -112,7 +112,7 @@ skipStringLit =
       skipWhile (\c -> c /= '"' && c /= '\\') *> ((escapeSeq *> contents) <|> pure ())
       where
         escapeSeq =
-          char '\\' *> satisfy (\c -> c == '"' || c == '\\')
+          char '\\' *> anyChar
 
 skipNumberLit :: Parser ()
 skipNumberLit =

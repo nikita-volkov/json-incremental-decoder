@@ -183,7 +183,8 @@ objectLookup (ObjectLookup lookupImpl) =
   where
     remainders =
       ObjectRows $
-      lift $
+      optional $
+      interspersed $
       SupplementedParsers.anyRows
 
 {-# INLINABLE arrayElements #-}
