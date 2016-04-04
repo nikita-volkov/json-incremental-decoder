@@ -1,13 +1,9 @@
 name:
   json-incremental-decoder
 version:
-  0.1.0.2
+  0.1.0.3
 synopsis:
-  A parser-agnostic declarative API for querying JSON-documents
-description:
-  /CAUTION/.
-  At the moment this library is only intended for use with trusted data-sources,
-  because some of the parsers are vulnerable to attacks.
+  Incremental JSON parser with early termination and a declarative DSL
 category:
   Data, JSON, Parsing
 homepage:
